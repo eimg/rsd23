@@ -1,11 +1,21 @@
-import { useState, createRef, createContext } from "react";
+import { useState, useRef, createContext, useMemo } from "react";
 import Item from "./Item";
 import Header from "./Header";
+import { useEffect } from "react";
 
 export const ClearContext = createContext();
 
+function count() {
+	console.log('hello react');
+	return 10;
+}
+
 export default function App() {
-	const input = createRef();
+	const input = useRef();
+
+	const num = useMemo(() => {
+		count();
+	}, []);
 
 	const [data, setData] = useState([
 		{ id: 1, name: "Alice", status: false },
@@ -29,7 +39,7 @@ export default function App() {
 	return (
 		<div>
 			<ClearContext.Provider value={{ clear }}>
-				<Header count={data.length} />
+
 				<ul>
 					{data.map(user => {
 						return (

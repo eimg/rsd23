@@ -1,31 +1,78 @@
-import { AppBar, Box, Toolbar, Typography, Badge, Button } from "@mui/material";
-import { List as ListIcon } from "@mui/icons-material";
+import {
+	AppBar,
+	Box,
+	Toolbar,
+	Typography,
+	Badge,
+	IconButton,
+	Menu,
+	MenuItem,
+} from "@mui/material";
 
-import { useContext } from "react";
+import {
+	Menu as MenuIcon,
+	MoreVert as MoreVertIcon,
+	LightMode as LightModeIcon,
+	DarkMode as DarkModeIcon,
+} from "@mui/icons-material";
+
+import { useContext, useState } from "react";
 import { ThemeContext } from "./ThemedApp";
 
-export default function Header({ count }) {
+export default function Header({ count, clear, toggleDrawer }) {
 	const { mode, setMode } = useContext(ThemeContext);
+
+	const [showMenu, setShowMenu] = useState(false);
 
 	return (
 		<Box sx={{ flexGrow: 1, mb: 3 }}>
 			<AppBar position="static">
 				<Toolbar>
-					<Badge badgeContent={count} color="error" sx={{ mr: 2 }}>
-						<ListIcon />
-					</Badge>
-					<Typography
-						variant="h6"
-						component="div"
-						sx={{ flexGrow: 1 }}>
-						Todo App
-					</Typography>
+					<Box sx={{ flexGrow: 1 }}>
+						<IconButton onClick={toggleDrawer()}>
+							<MenuIcon />
+						</IconButton>
+
+						<Badge
+							badgeContent={count}
+							color="error"
+							sx={{ ml: 2 }}>
+							<Typography
+								variant="h6"
+								component="span"
+								sx={{ flexGrow: 1 }}>
+								Todo
+							</Typography>
+						</Badge>
+					</Box>
 
 					{mode === "dark" ? (
-						<Button onClick={() => setMode("light")}>Light</Button>
+						<IconButton onClick={() => setMode("light")}>
+							<LightModeIcon />
+						</IconButton>
 					) : (
-						<Button onClick={() => setMode("dark")}>Dark</Button>
+						<IconButton onClick={() => setMode("dark")}>
+							<DarkModeIcon />
+						</IconButton>
 					)}
+
+					<IconButton onClick={e => setShowMenu(e.currentTarget)}>
+						<MoreVertIcon />
+					</IconButton>
+
+					<Menu
+						anchorEl={showMenu}
+						open={Boolean(showMenu)}
+						onClose={() => setShowMenu(false)}>
+						<MenuItem
+							onClick={() => {
+								clear();
+								setShowMenu(false);
+							}}
+							sx={{ width: 200 }}>
+							Clear
+						</MenuItem>
+					</Menu>
 				</Toolbar>
 			</AppBar>
 		</Box>
