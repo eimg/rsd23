@@ -1,63 +1,39 @@
-import { useState, useRef, createContext, useMemo } from "react";
-import Item from "./Item";
-import Header from "./Header";
-import { useEffect } from "react";
-
-export const ClearContext = createContext();
-
-function count() {
-	console.log('hello react');
-	return 10;
-}
+import { Link, Outlet } from "react-router-dom";
 
 export default function App() {
-	const input = useRef();
-
-	const num = useMemo(() => {
-		count();
-	}, []);
-
-	const [data, setData] = useState([
-		{ id: 1, name: "Alice", status: false },
-		{ id: 2, name: "Bob", status: false },
-		{ id: 3, name: "Chris", status: false },
-	]);
-
-	const clear = () => {
-		setData([]);
-	}
-
-	const add = name => {
-		const id = data[data.length - 1].id + 1;
-		setData([...data, { id, name }]);
-	};
-
-	const remove = id => {
-		setData(data.filter(user => user.id !== id));
-	};
+	const add = () => () => alert("Add function");
 
 	return (
 		<div>
-			<ClearContext.Provider value={{ clear }}>
+			<h1>Home</h1>
+			<button onClick={add()}>Add Button</button>
+			<ul>
+				<li>
+					{" "}
+					<Link to="/">Home</Link>{" "}
+				</li>
+				<li>
+					{" "}
+					<Link to="/about">About</Link>{" "}
+				</li>
+				<li>
+					User
+					<ul>
+						<li>
+							{" "}
+							<Link to="/user/alice">Alice</Link>{" "}
+						</li>
+						<li>
+							{" "}
+							<Link to="/user/bob">Bob</Link>{" "}
+						</li>
+					</ul>
+				</li>
+			</ul>
 
-				<ul>
-					{data.map(user => {
-						return (
-							<Item key={user.id} user={user} remove={remove} />
-						);
-					})}
-				</ul>
-				<form
-					onSubmit={e => {
-						e.preventDefault();
-						add(input.current.value);
-						input.current.value = "";
-						input.current.focus();
-					}}>
-					<input type="text" ref={input} />
-					<input type="submit" value="Add" />
-				</form>
-			</ClearContext.Provider>
+			<hr />
+
+			<Outlet />
 		</div>
 	);
 }
