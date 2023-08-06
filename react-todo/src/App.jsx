@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { List, Box } from "@mui/material";
 
@@ -9,15 +9,17 @@ import MainDrawer from "./MainDrawer";
 
 import { Container } from "@mui/material";
 
-export default function App() {
-	const [tasks, setTasks] = useState([
-		{ _id: 1, subject: "Milk", done: false },
-		{ _id: 2, subject: "Butter", done: true },
-		{ _id: 3, subject: "Bread", done: true },
-		{ _id: 4, subject: "Egg", done: false },
-	]);
+const url = "http://localhost:8888/tasks";
 
+export default function App() {
+	const [tasks, setTasks] = useState([]);
 	const [showDrawer, setShowDrawer] = useState(false);
+
+	useEffect(() => {
+		fetch(url)
+			.then(res => res.json())
+			.then(data => setTasks(data));
+	}, []);
 
 	const toggleDrawer = () => event => {
 		if (
@@ -39,6 +41,10 @@ export default function App() {
 	};
 
 	const toggleTask = _id => {
+		fetch(`${url}/${_id}/toggle`, {
+			method: 'PUT'
+		});
+
 		setTasks(
 			tasks.map(task => {
 				if (task._id === _id) task.done = !task.done;
@@ -60,10 +66,7 @@ export default function App() {
 				toggleDrawer={toggleDrawer}
 			/>
 
-			<MainDrawer
-				showDrawer={showDrawer}
-				toggleDrawer={toggleDrawer}
-			/>
+			<MainDrawer showDrawer={showDrawer} toggleDrawer={toggleDrawer} />
 
 			<Container>
 				<Box sx={{ mx: { lg: 20, md: 10 } }}>

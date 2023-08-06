@@ -1,6 +1,6 @@
-const num = () => () => 2;
+const out = () => (
+	"output"
+);
 
-const n = num();
-const result = n();
+console.log( out() );
 
-console.log(result);
