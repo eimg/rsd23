@@ -8,7 +8,7 @@ import {
 import { Add as AddIcon } from "@mui/icons-material";
 
 import { useDispatch } from "react-redux";
-import { add } from "./features/todo/todoSlice";
+import { postTask } from "./features/todo/todoSlice";
 
 export default function Form() {
 	const input = useRef();
@@ -20,7 +20,7 @@ export default function Form() {
 				e.preventDefault();
 
 				const subject = input.current.value;
-				dispatch(add(subject));
+				dispatch(postTask(subject));
 
 				input.current.value = "";
 				input.current.focus();

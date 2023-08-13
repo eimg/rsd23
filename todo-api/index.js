@@ -13,54 +13,52 @@ const mongo = new MongoClient("mongodb://127.0.0.1");
 const db = mongo.db("todo");
 
 app.get("/tasks", async function (req, res) {
-	const data = await db.collection("tasks").find().toArray();
-	res.json(data);
+	try {
+		const data = await db.collection("tasks").find().toArray();
+
+		setTimeout(() => {
+			res.json(data);
+		}, 3000);
+	} catch (err) {
+		res.status(500).json({msg: 'Something went wrong'});
+	}
 });
 
 app.post("/tasks", async function (req, res) {
 	const { subject } = req.body;
 	if (!subject) return res.status(400).json({ msg: "subject required" });
 
-	const result = await db
-		.collection("tasks")
-		.insertOne({ subject, done: false });
+	const data = { subject, done: false };
+	const result = await db.collection("tasks").insertOne(data);
 
-	const data = await db.collection("tasks").findOne({
-		_id: new ObjectId(result.insertedId),
-	});
-
-	res.json(data);
+	res.json({ _id: result.insertedId, ...data });
 });
 
 app.put("/tasks/:id/toggle", async function (req, res) {
 	const { id } = req.params;
-	const data = await db
-		.collection("tasks")
-		.findOne({ _id: new ObjectId(id) });
 
 	const result = await db
 		.collection("tasks")
-		.updateOne(
-			{ _id: new ObjectId(id) },
+		.updateOne({ _id: new ObjectId(id) }, [
 			{
-				$set: { done: !data.done }
-			}
-		);
+				$set: { done: { $not: "$done" } },
+			},
+		]);
 
 	res.json(result);
 });
 
-app.delete('/tasks/:id', async function(req, res){
+app.delete("/tasks/:id", async function (req, res) {
 	const { id } = req.params;
-	const result = await db.collection("tasks")
+	const result = await db
+		.collection("tasks")
 		.deleteOne({ _id: new ObjectId(id) });
 
 	res.json(result);
 });
 
-app.delete('/tasks', async function(req, res) {
-	const result = await db.collection("tasks")
-		.deleteMany({ done: true });
+app.delete("/tasks", async function (req, res) {
+	const result = await db.collection("tasks").deleteMany({ done: true });
 
 	res.json(result);
 });
