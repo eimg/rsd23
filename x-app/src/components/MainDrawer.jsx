@@ -13,6 +13,7 @@ import {
 	Home as HomeIcon,
 	Login as LoginIcon,
 	PersonAddAlt as PersonAddAltIcon,
+	Person2 as PersonIcon,
 } from "@mui/icons-material";
 
 import { useNavigate } from "react-router-dom";
@@ -44,6 +45,18 @@ export default function MainDrawer({ showDrawer, toggleDrawer }) {
 					</Box>
 
 					<List sx={{ mt: 10 }}>
+						<ListItem>
+							<ListItemButton
+								onClick={() => {
+									navigate("/profile/alice");
+									toggleDrawer();
+								}}>
+								<ListItemIcon>
+									<PersonIcon />
+								</ListItemIcon>
+								<ListItemText primary="Alice" />
+							</ListItemButton>
+						</ListItem>
 						<ListItem>
 							<ListItemButton
 								onClick={() => {
