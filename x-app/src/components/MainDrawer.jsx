@@ -18,8 +18,13 @@ import {
 
 import { useNavigate } from "react-router-dom";
 
+import { useContext } from "react";
+import { AuthContext } from "../ThemedApp";
+
 export default function MainDrawer({ showDrawer, toggleDrawer }) {
 	const navigate = useNavigate();
+
+	const { auth, setAuth } = useContext(AuthContext);
 
 	return (
 		<div>
@@ -45,54 +50,63 @@ export default function MainDrawer({ showDrawer, toggleDrawer }) {
 					</Box>
 
 					<List sx={{ mt: 10 }}>
-						<ListItem>
-							<ListItemButton
-								onClick={() => {
-									navigate("/profile/alice");
-									toggleDrawer();
-								}}>
-								<ListItemIcon>
-									<PersonIcon />
-								</ListItemIcon>
-								<ListItemText primary="Alice" />
-							</ListItemButton>
-						</ListItem>
-						<ListItem>
-							<ListItemButton
-								onClick={() => {
-									navigate("/");
-									toggleDrawer();
-								}}>
-								<ListItemIcon>
-									<HomeIcon />
-								</ListItemIcon>
-								<ListItemText primary="Home" />
-							</ListItemButton>
-						</ListItem>
-						<ListItem>
-							<ListItemButton
-								onClick={() => {
-									navigate("/login");
-									toggleDrawer();
-								}}>
-								<ListItemIcon>
-									<LoginIcon />
-								</ListItemIcon>
-								<ListItemText primary="Login" />
-							</ListItemButton>
-						</ListItem>
-						<ListItem>
-							<ListItemButton
-								onClick={() => {
-									navigate("/register");
-									toggleDrawer();
-								}}>
-								<ListItemIcon>
-									<PersonAddAltIcon />
-								</ListItemIcon>
-								<ListItemText primary="Register" />
-							</ListItemButton>
-						</ListItem>
+						{auth && (
+							<>
+								<ListItem>
+									<ListItemButton
+										onClick={() => {
+											toggleDrawer();
+										}}>
+										<ListItemIcon>
+											<PersonIcon />
+										</ListItemIcon>
+										<ListItemText primary="Profile" />
+									</ListItemButton>
+								</ListItem>
+								<ListItem>
+									<ListItemButton
+										onClick={() => {
+											setAuth(false);
+											toggleDrawer();
+										}}>
+										<ListItemIcon>
+											<HomeIcon />
+										</ListItemIcon>
+										<ListItemText primary="Logout" />
+									</ListItemButton>
+								</ListItem>
+							</>
+						)}
+
+						{!auth && (
+							<>
+								<ListItem>
+									<ListItemButton
+										onClick={() => {
+											// navigate("/login");
+											setAuth(true);
+											toggleDrawer();
+										}}>
+										<ListItemIcon>
+											<LoginIcon />
+										</ListItemIcon>
+										<ListItemText primary="Login" />
+									</ListItemButton>
+								</ListItem>
+								<ListItem>
+									<ListItemButton
+										onClick={() => {
+											navigate("/register");
+											toggleDrawer();
+										}}>
+										<ListItemIcon>
+											<PersonAddAltIcon />
+										</ListItemIcon>
+										<ListItemText primary="Register" />
+									</ListItemButton>
+								</ListItem>
+							</>
+						)}
 					</List>
 				</Box>
 			</Drawer>

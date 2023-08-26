@@ -8,6 +8,10 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const secret = "horse battery staple";
+
 const { MongoClient, ObjectId } = require("mongodb");
 const mongo = new MongoClient("mongodb://127.0.0.1");
 
@@ -15,12 +19,77 @@ const xdb = mongo.db("x");
 const xposts = xdb.collection("posts");
 const xusers = xdb.collection("users");
 
-app.get("/posts", async function (req, res) {
+const auth = function (req, res, next) {
+	const { authorization } = req.headers;
+	const token = authorization && authorization.split(" ")[1];
+
+	if (!token) {
+		return res.status(401).json({ msg: "Token required" });
+	}
+
+	jwt.verify(token, secret, function (err, user) {
+		if (err) {
+			return res.status(401).json({ msg: "Invalid token" });
+		}
+
+		res.locals.user = user;
+		next();
+	});
+};
+
+app.get("/login", async function (req, res) {
+	const { handle, password } = req.body;
+	if (!handle || !password) {
+		return res.status(400).json({ msg: "required: handle and password" });
+	}
+
+	try {
+		const user = await xusers.findOne({ handle });
+		if (user) {
+			const result = await bcrypt.compare(password, user.password);
+
+			if (result) {
+				const token = jwt.sign(user, secret);
+				res.json({ token });
+			}
+		}
+
+		return res.status(403).json({ msg: "Incorrect handle or password" });
+	} catch {
+		return res.sendStatus(500);
+	}
+});
+
+app.post("/users", async function (req, res) {
+	const { name, handle, profile, password } = req.body;
+	if (!name || !handle || !password) {
+		return res
+			.status(400)
+			.json({ msg: "required: name, handle and password" });
+	}
+
+	let hash = await bcrypt.hash(password, 10);
+
+	try {
+		const result = await xusers.insertOne({
+			name,
+			handle,
+			profile,
+			password: hash,
+		});
+
+		res.json({ _id: result.insertedId, name, handle, profile });
+	} catch {
+		res.sendStatus(500);
+	}
+});
+
+app.get("/posts", auth, async function (req, res) {
 	try {
 		const data = await xposts
 			.aggregate([
 				{
-					$match: { type: "post" }
+					$match: { type: "post" },
 				},
 				{
 					$lookup: {
@@ -31,11 +100,11 @@ app.get("/posts", async function (req, res) {
 					},
 				},
 				{
-					$sort: { created_at: -1 }
+					$sort: { created_at: -1 },
 				},
 				{
-					$limit: 20
-				}
+					$limit: 20,
+				},
 			])
 			.toArray();
 
@@ -94,11 +163,11 @@ app.get("/posts/:id", async function (req, res) {
 		format.user = format.user[0];
 		delete format.user.password;
 
-		if(format.comments.length) {
+		if (format.comments.length) {
 			format.comments = format.comments.map(comment => {
 				comment.user = comment.user[0];
 				return comment;
-			})
+			});
 		}
 
 		return res.json(format);
@@ -116,7 +185,7 @@ app.get("/users/:handle", async function (req, res) {
 		const data = await xposts
 			.aggregate([
 				{
-					$match: { owner: user._id }
+					$match: { owner: user._id },
 				},
 				{
 					$lookup: {

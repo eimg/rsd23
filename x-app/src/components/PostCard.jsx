@@ -19,7 +19,8 @@ export default function PostCard({ post, primary }) {
 		<Card
 			sx={{
 				mb: primary ? 3 : 1,
-				bgcolor: primary ? "#def" : "transparent",
+				borderColor: primary ? blue[400] : "transparent",
+				padding: primary ? 3 : 1,
 			}}
 			variant="outlined">
 			<CardActionArea
