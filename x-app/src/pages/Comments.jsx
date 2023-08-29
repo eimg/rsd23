@@ -1,11 +1,10 @@
 import { Box } from "@mui/material";
 import { useState, useEffect } from "react";
-
-import PostCard from "../components/PostCard";
-
 import { useParams } from "react-router-dom";
 
-const url = "http://localhost:8888/posts";
+import PostCard from "../components/PostCard";
+import Loading from "../components/Loading";
+import { fetchComments } from "../libs/fetcher";
 
 export default function Comments() {
 	const { id } = useParams();
@@ -15,9 +14,9 @@ export default function Comments() {
 
 	useEffect(() => {
 		(async () => {
-			const res = await fetch(`${url}/${id}`);
-			const data = await res.json();
-			setPost(data);
+			const comments = await fetchComments(id);
+
+			setPost(comments);
 			setLoading(false);
 		})();
 	}, []);
@@ -25,7 +24,7 @@ export default function Comments() {
 	return (
 		<>
 			{loading ? (
-				<Box sx={{ textAlign: "center" }}>Loading...</Box>
+				<Loading />
 			) : (
 				<Box>
 					<PostCard post={post} primary />

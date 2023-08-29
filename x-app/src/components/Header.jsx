@@ -1,74 +1,79 @@
-import {
-	AppBar,
-	Box,
-	Toolbar,
-	Typography,
-	Badge,
-	IconButton,
-	Menu,
-	MenuItem,
-} from "@mui/material";
+import { useContext } from "react";
+
+import { Box, AppBar, Toolbar, IconButton } from "@mui/material";
 
 import {
+	ArrowBack as ArrowBackIcon,
+	Notifications as NotificationsIcon,
 	Menu as MenuIcon,
-	MoreVert as MoreVertIcon,
 	LightMode as LightModeIcon,
 	DarkMode as DarkModeIcon,
 } from "@mui/icons-material";
 
-import { useContext, useState } from "react";
-import { ThemeContext } from "../ThemedApp";
-import { Link } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+
+import { AuthContext, ThemeContext } from "../ThemedApp";
 
 export default function Header({ toggleDrawer }) {
+	const location = useLocation();
+	const navigate = useNavigate();
+
+	const { auth } = useContext(AuthContext);
 	const { mode, setMode } = useContext(ThemeContext);
-	const [showMenu, setShowMenu] = useState(false);
+
+	const mainPages = ["/", "/login", "/register"];
 
 	return (
-		<Box sx={{ flexGrow: 1, mb: 3 }}>
-			<AppBar position="static">
-				<Toolbar>
-					<IconButton onClick={toggleDrawer}>
+		<AppBar
+			position="static"
+			elevation={2}
+			sx={{ mb: 4, bgcolor: "appbar.background" }}>
+			<Toolbar>
+				{mainPages.includes(location.pathname) ? (
+					<IconButton
+						size="large"
+						edge="start"
+						color="inherit"
+						sx={{ mr: 2 }}
+						onClick={toggleDrawer}>
 						<MenuIcon />
 					</IconButton>
-
-					<Box
-						sx={{
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "center",
-							flexGrow: 1,
+				) : (
+					<IconButton
+						size="large"
+						edge="start"
+						color="inherit"
+						onClick={() => {
+							navigate(-1);
 						}}>
-					</Box>
-
-					{mode === "dark" ? (
-						<IconButton onClick={() => setMode("light")}>
-							<LightModeIcon />
-						</IconButton>
-					) : (
-						<IconButton onClick={() => setMode("dark")}>
-							<DarkModeIcon />
-						</IconButton>
-					)}
-
-					<IconButton onClick={e => setShowMenu(e.currentTarget)}>
-						<MoreVertIcon />
+						<ArrowBackIcon />
 					</IconButton>
+				)}
 
-					<Menu
-						anchorEl={showMenu}
-						open={Boolean(showMenu)}
-						onClose={() => setShowMenu(false)}>
-						<MenuItem
-							onClick={() => {
-								setShowMenu(false);
-							}}
-							sx={{ width: 200 }}>
-							Logout
-						</MenuItem>
-					</Menu>
-				</Toolbar>
-			</AppBar>
-		</Box>
+				<Box
+					sx={{
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+						flexGrow: 1,
+					}}></Box>
+
+				{mode === "dark" ? (
+					<IconButton onClick={() => setMode("light")}>
+						<LightModeIcon />
+					</IconButton>
+				) : (
+					<IconButton onClick={() => setMode("dark")}>
+						<DarkModeIcon />
+					</IconButton>
+				)}
+
+				{auth && (
+					<IconButton color="inherit">
+						<NotificationsIcon />
+					</IconButton>
+				)}
+			</Toolbar>
+		</AppBar>
 	);
 }

@@ -1,19 +1,23 @@
-import { Box } from "@mui/material";
 import { useState, useEffect } from "react";
 
-import PostCard from "../components/PostCard";
+import { useNavigate } from "react-router-dom";
 
-const url = "http://localhost:8888/posts";
+import PostCard from "../components/PostCard";
+import Loading from "../components/Loading";
+import { fetchPosts } from "../libs/fetcher";
 
 export default function Home() {
+	const navigate = useNavigate();
+
 	const [posts, setPosts] = useState([]);
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
 		(async () => {
-			const res = await fetch(url);
-			const data = await res.json();
-			setPosts(data);
+			const posts = await fetchPosts();
+			if(!posts) return navigate("/login");
+
+			setPosts(posts);
 			setLoading(false);
 		})();
 	}, []);
@@ -21,10 +25,10 @@ export default function Home() {
 	return (
 		<>
 			{loading ? (
-				<Box sx={{textAlign: 'center'}}>Loading...</Box>
+				<Loading />
 			) : (
 				posts.map(post => {
-					return <PostCard post={post} />;
+					return <PostCard post={post} key={post._id} />;
 				})
 			)}
 		</>

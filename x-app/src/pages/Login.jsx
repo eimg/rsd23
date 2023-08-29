@@ -1,3 +1,5 @@
+import { useRef, useState, useContext } from "react";
+
 import {
 	Box,
 	Alert,
@@ -7,9 +9,15 @@ import {
 	InputAdornment,
 } from "@mui/material";
 
-import { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../ThemedApp";
+
+import { fetchLogin } from "../libs/fetcher";
 
 export default function Login() {
+	const navigate = useNavigate();
+	const { setAuth, setAuthUser } = useContext(AuthContext);
+
 	const handleInput = useRef();
 	const passwordInput = useRef();
 
@@ -35,6 +43,15 @@ export default function Login() {
 
 					const handle = handleInput.current.value;
 					const password = passwordInput.current.value;
+
+					(async () => {
+						const user = await fetchLogin(handle, password);
+						if(!user) setHasError(true);
+
+						setAuth(true);
+						setAuthUser(user);
+						navigate("/");
+					})();
 				}}>
 				<OutlinedInput
 					required

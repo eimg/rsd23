@@ -37,7 +37,7 @@ const auth = function (req, res, next) {
 	});
 };
 
-app.get("/login", async function (req, res) {
+app.post("/login", async function (req, res) {
 	const { handle, password } = req.body;
 	if (!handle || !password) {
 		return res.status(400).json({ msg: "required: handle and password" });
@@ -50,7 +50,7 @@ app.get("/login", async function (req, res) {
 
 			if (result) {
 				const token = jwt.sign(user, secret);
-				res.json({ token });
+				return res.json({ token, user });
 			}
 		}
 
@@ -78,9 +78,51 @@ app.post("/users", async function (req, res) {
 			password: hash,
 		});
 
-		res.json({ _id: result.insertedId, name, handle, profile });
+		return res.json({ _id: result.insertedId, name, handle, profile });
 	} catch {
-		res.sendStatus(500);
+		return res.sendStatus(500);
+	}
+});
+
+app.get("/verify", auth, function (req, res, next) {
+	res.json(res.locals.user);
+});
+
+app.get("/users/:handle", async function (req, res) {
+	const { handle } = req.params;
+
+	try {
+		const user = await xusers.findOne({ handle });
+
+		const data = await xposts
+			.aggregate([
+				{
+					$match: { owner: user._id },
+				},
+				{
+					$lookup: {
+						localField: "owner",
+						from: "users",
+						foreignField: "_id",
+						as: "user",
+					},
+				},
+				{
+					$limit: 20,
+				},
+			])
+			.toArray();
+
+		const format = data.map(post => {
+			post.user = post.user[0];
+			delete post.user.password;
+
+			return post;
+		});
+
+		return res.json(format);
+	} catch (err) {
+		return res.sendStatus(500);
 	}
 });
 
@@ -140,6 +182,14 @@ app.get("/posts/:id", async function (req, res) {
 				},
 				{
 					$lookup: {
+						from: "users",
+						localField: "likes",
+						foreignField: "_id",
+						as: "liked_users",
+					},
+				},
+				{
+					$lookup: {
 						localField: "_id",
 						from: "posts",
 						foreignField: "origin",
@@ -169,44 +219,6 @@ app.get("/posts/:id", async function (req, res) {
 				return comment;
 			});
 		}
-
-		return res.json(format);
-	} catch (err) {
-		return res.sendStatus(500);
-	}
-});
-
-app.get("/users/:handle", async function (req, res) {
-	const { handle } = req.params;
-
-	try {
-		const user = await xusers.findOne({ handle });
-
-		const data = await xposts
-			.aggregate([
-				{
-					$match: { owner: user._id },
-				},
-				{
-					$lookup: {
-						localField: "owner",
-						from: "users",
-						foreignField: "_id",
-						as: "user",
-					},
-				},
-				{
-					$limit: 20,
-				},
-			])
-			.toArray();
-
-		const format = data.map(post => {
-			post.user = post.user[0];
-			delete post.user.password;
-
-			return post;
-		});
 
 		return res.json(format);
 	} catch (err) {

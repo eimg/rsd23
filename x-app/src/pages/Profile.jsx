@@ -1,12 +1,13 @@
-import { Box, Avatar } from "@mui/material";
 import { useState, useEffect } from "react";
-import { blue } from "@mui/material/colors";
 
-import PostCard from "../components/PostCard";
+import { Box, Avatar } from "@mui/material";
+import { pink } from "@mui/material/colors";
 
 import { useParams } from "react-router-dom";
 
-const url = "http://localhost:8888/users";
+import PostCard from "../components/PostCard";
+
+import { fetchProfile } from "../libs/fetcher";
 
 export default function Profile() {
 	const { handle } = useParams();
@@ -16,9 +17,8 @@ export default function Profile() {
 
 	useEffect(() => {
 		(async () => {
-			const res = await fetch(`${url}/${handle}`);
-			const data = await res.json();
-			setPosts(data);
+			const profile = await fetchProfile(handle);
+			setPosts(profile);
 			setLoading(false);
 		})();
 	}, [handle]);
@@ -31,7 +31,7 @@ export default function Profile() {
 				<Box>
 					<Box
 						sx={{
-							background: "grey",
+							bgcolor: "banner.background",
 							height: 200,
 							display: "flex",
 							alignItems: "flex-end",
@@ -40,7 +40,7 @@ export default function Profile() {
 						}}>
 						<Avatar
 							sx={{
-								background: blue[500],
+								background: pink[500],
 								width: 128,
 								height: 128,
 								mb: -6
@@ -50,7 +50,7 @@ export default function Profile() {
 					</Box>
 
 					{posts.map(post => {
-						return <PostCard post={post} />;
+						return <PostCard post={post} key={post._id} />;
 					})}
 				</Box>
 			)}

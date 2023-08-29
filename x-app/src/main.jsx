@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import "./style.css";
 import ThemedApp from "./ThemedApp";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
@@ -8,6 +9,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import Comments from "./pages/Comments";
+import Likes from "./pages/Likes";
 
 const router = createBrowserRouter([
 	{
@@ -33,6 +35,10 @@ const router = createBrowserRouter([
 			{
 				path: "/comments/:id",
 				element: <Comments />
+			},
+			{
+				path: "/likes/:id",
+				element: <Likes />
 			}
 		],
 	},

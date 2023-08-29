@@ -1,0 +1,27 @@
+.loading {
+	position: fixed;
+	z-index: 99999;
+	top: 0;
+	left: 0;
+	width: 100%;
+	background: #28c76f;
+	height: 2px;
+	animation: progress 1s infinite;
+}
+
+@keyframes progress {
+	0% {
+		width: 0;
+		left: 0;
+	}
+
+	50% {
+		width: 100%;
+		left: 0;
+	}
+
+	100% {
+		width: 0;
+		left: 100%;
+	}
+}
