@@ -45,6 +45,7 @@ app.post("/login", async function (req, res) {
 
 	try {
 		const user = await xusers.findOne({ handle });
+
 		if (user) {
 			const result = await bcrypt.compare(password, user.password);
 
@@ -55,8 +56,8 @@ app.post("/login", async function (req, res) {
 		}
 
 		return res.status(403).json({ msg: "Incorrect handle or password" });
-	} catch {
-		return res.sendStatus(500);
+	} catch (e) {
+		return res.status(500).json({ msg: e.message });
 	}
 });
 
@@ -224,6 +225,28 @@ app.get("/posts/:id", async function (req, res) {
 	} catch (err) {
 		return res.sendStatus(500);
 	}
+});
+
+app.put("/posts/:id/like", auth, async (req, res) => {
+	const _id = new ObjectId(req.params.id);
+	const user_id = new ObjectId(res.locals.user._id);
+
+	const post = await xposts.findOne({ _id });
+
+	if (post.likes.find(like => like.toString() === user_id.toString())) {
+		post.likes = post.likes.filter(
+			like => like.toString() !== user_id.toString(),
+		);
+	} else {
+		post.likes.push(user_id);
+	}
+
+	const result = await xposts.updateOne(
+		{ _id },
+		{ $set: post },
+	);
+
+	res.json(result);
 });
 
 app.listen(8888, () => {

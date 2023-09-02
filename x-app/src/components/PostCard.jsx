@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext } from "react";
 
 import {
 	Avatar,
@@ -17,13 +17,20 @@ import { useNavigate } from "react-router-dom";
 
 import { formatRelative, parseISO } from "date-fns";
 
+import { AuthContext } from "../ThemedApp";
+
 import {
 	Comment as CommentIcon,
 	FavoriteBorderOutlined as LikeIcon,
+	Favorite as LikedIcon,
 } from "@mui/icons-material";
 
-export default function PostCard({ post, primary }) {
+import { fetchToggleLike } from "../libs/fetcher";
+
+export default function PostCard({ post, primary, toggleLike }) {
 	const navigate = useNavigate();
+
+	const { authUser } = useContext(AuthContext);
 
 	return (
 		<Card
@@ -88,8 +95,15 @@ export default function PostCard({ post, primary }) {
 			<Box
 				sx={{ display: "flex", justifyContent: "space-around", mb: 1 }}>
 				<ButtonGroup variant="text">
-					<IconButton>
-						<LikeIcon color="error" />
+					<IconButton onClick={() => {
+						toggleLike(post._id);
+						fetchToggleLike(post._id);
+					}}>
+						{post.likes.includes(authUser._id) ? (
+							<LikedIcon color="error" />
+						) : (
+							<LikeIcon color="error" />
+						)}
 					</IconButton>
 					<Button
 						onClick={() => {

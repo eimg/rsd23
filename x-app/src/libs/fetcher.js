@@ -1,3 +1,5 @@
+import { TokenRounded } from "@mui/icons-material";
+
 const api = "http://localhost:8888";
 
 export function getToken() {
@@ -86,4 +88,17 @@ export async function fetchLikes(id) {
 
 	const post = await res.json();
 	return post.liked_users || [];
+}
+
+export async function fetchToggleLike(id) {
+	const token = getToken();
+
+	const res = await fetch(`${api}/posts/${id}/like`, {
+		method: 'put',
+		headers: {
+			'Authorization': `Bearer ${token}`
+		}
+	});
+
+	return res.ok;
 }

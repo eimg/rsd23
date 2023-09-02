@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 
 import { useNavigate } from "react-router-dom";
 
@@ -6,8 +6,12 @@ import PostCard from "../components/PostCard";
 import Loading from "../components/Loading";
 import { fetchPosts } from "../libs/fetcher";
 
+import { AuthContext } from "../ThemedApp";
+
 export default function Home() {
 	const navigate = useNavigate();
+
+	const { authUser } = useContext(AuthContext);
 
 	const [posts, setPosts] = useState([]);
 	const [loading, setLoading] = useState(true);
@@ -15,12 +19,30 @@ export default function Home() {
 	useEffect(() => {
 		(async () => {
 			const posts = await fetchPosts();
-			if(!posts) return navigate("/login");
+			if (!posts) return navigate("/login");
 
 			setPosts(posts);
 			setLoading(false);
 		})();
 	}, []);
+
+	const toggleLike = _id => {
+		setPosts(
+			posts.map(post => {
+				if (post._id === _id) {
+					if (post.likes.includes(authUser._id)) {
+						post.likes = post.likes.filter(
+							like => like !== authUser._id,
+						);
+					} else {
+						post.likes.push(authUser._id);
+					}
+				}
+
+				return post;
+			}),
+		);
+	};
 
 	return (
 		<>
@@ -28,7 +50,13 @@ export default function Home() {
 				<Loading />
 			) : (
 				posts.map(post => {
-					return <PostCard post={post} key={post._id} />;
+					return (
+						<PostCard
+							post={post}
+							key={post._id}
+							toggleLike={toggleLike}
+						/>
+					);
 				})
 			)}
 		</>
