@@ -89,6 +89,48 @@ app.get("/verify", auth, function (req, res, next) {
 	res.json(res.locals.user);
 });
 
+app.get("/users/:id/followers", async function(req, res) {
+	const { id } = req.params;
+
+	const user = await xusers.aggregate([
+		{
+			$match: { _id: new ObjectId(id) },
+		},
+		{
+			$lookup: {
+				localField: "followers",
+				from: "users",
+				foreignField: "_id",
+				as: "follower_users",
+			},
+		},
+	]).toArray();
+
+	res.json(user[0]);
+});
+
+app.get("/users/:id/following", async function (req, res) {
+	const { id } = req.params;
+
+	const user = await xusers
+		.aggregate([
+			{
+				$match: { _id: new ObjectId(id) },
+			},
+			{
+				$lookup: {
+					localField: "following",
+					from: "users",
+					foreignField: "_id",
+					as: "following_users",
+				},
+			},
+		])
+		.toArray();
+
+	res.json(user[0]);
+});
+
 app.get("/users/:handle", async function (req, res) {
 	const { handle } = req.params;
 
@@ -109,6 +151,14 @@ app.get("/users/:handle", async function (req, res) {
 					},
 				},
 				{
+					$lookup: {
+						localField: "_id",
+						from: "posts",
+						foreignField: "origin",
+						as: "comments",
+					},
+				},
+				{
 					$limit: 20,
 				},
 			])
@@ -121,7 +171,7 @@ app.get("/users/:handle", async function (req, res) {
 			return post;
 		});
 
-		return res.json(format);
+		return res.json({ posts: format, user });
 	} catch (err) {
 		return res.sendStatus(500);
 	}
@@ -143,7 +193,15 @@ app.get("/posts", auth, async function (req, res) {
 					},
 				},
 				{
-					$sort: { created_at: -1 },
+					$lookup: {
+						localField: "_id",
+						from: "posts",
+						foreignField: "origin",
+						as: "comments",
+					},
+				},
+				{
+					$sort: { created: -1 },
 				},
 				{
 					$limit: 20,
@@ -162,6 +220,40 @@ app.get("/posts", auth, async function (req, res) {
 	} catch (err) {
 		return res.sendStatus(500);
 	}
+});
+
+app.post("/posts", auth, async function (req, res) {
+	const { user } = res.locals;
+	const { body } = req.body;
+
+	const post = {
+		type: "post",
+		body,
+		owner: new ObjectId(user._id),
+		created: new Date(),
+		likes: [],
+	};
+
+	const result = await xposts.insertOne(post);
+	res.json({ _id: result.insertedId, ...post });
+});
+
+app.post("/posts/:origin/comment", auth, async function (req, res) {
+	const { user } = res.locals;
+	const { body } = req.body;
+	const { origin } = req.params;
+
+	const comment = {
+		type: "comment",
+		origin: new ObjectId(origin),
+		body,
+		owner: new ObjectId(user._id),
+		created: new Date(),
+		likes: [],
+	};
+
+	const result = await xposts.insertOne(comment);
+	res.json({ _id: result.insertedId, ...comment });
 });
 
 app.get("/posts/:id", async function (req, res) {
@@ -204,6 +296,14 @@ app.get("/posts/:id", async function (req, res) {
 									as: "user",
 								},
 							},
+							{
+								$lookup: {
+									localField: "_id",
+									from: "posts",
+									foreignField: "origin",
+									as: "comments",
+								},
+							},
 						],
 					},
 				},
@@ -241,10 +341,7 @@ app.put("/posts/:id/like", auth, async (req, res) => {
 		post.likes.push(user_id);
 	}
 
-	const result = await xposts.updateOne(
-		{ _id },
-		{ $set: post },
-	);
+	const result = await xposts.updateOne({ _id }, { $set: post });
 
 	res.json(result);
 });

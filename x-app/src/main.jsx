@@ -10,6 +10,9 @@ import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import Comments from "./pages/Comments";
 import Likes from "./pages/Likes";
+import Add from "./pages/Add";
+import Followers from "./pages/Followers";
+import Following from "./pages/Following";
 
 const router = createBrowserRouter([
 	{
@@ -30,16 +33,28 @@ const router = createBrowserRouter([
 			},
 			{
 				path: "/profile/:handle",
-				element: <Profile />
+				element: <Profile />,
 			},
 			{
 				path: "/comments/:id",
-				element: <Comments />
+				element: <Comments />,
 			},
 			{
 				path: "/likes/:id",
-				element: <Likes />
-			}
+				element: <Likes />,
+			},
+			{
+				path: "/posts/add",
+				element: <Add />,
+			},
+			{
+				path: "/users/:id/followers",
+				element: <Followers />,
+			},
+			{
+				path: "/users/:id/following",
+				element: <Following />,
+			},
 		],
 	},
 ]);

@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useState, useContext } from "react";
 
 import {
 	Avatar,
@@ -10,6 +10,10 @@ import {
 	CardContent,
 	IconButton,
 	Typography,
+	Menu,
+	MenuItem,
+	ListItemIcon,
+	ListItemText,
 } from "@mui/material";
 
 import { green, pink } from "@mui/material/colors";
@@ -23,6 +27,8 @@ import {
 	Comment as CommentIcon,
 	FavoriteBorderOutlined as LikeIcon,
 	Favorite as LikedIcon,
+	MoreVert as MoreVertIcon,
+	Delete as DeleteIcon,
 } from "@mui/icons-material";
 
 import { fetchToggleLike } from "../libs/fetcher";
@@ -31,6 +37,15 @@ export default function PostCard({ post, primary, toggleLike }) {
 	const navigate = useNavigate();
 
 	const { authUser } = useContext(AuthContext);
+
+	const [anchorEl, setAnchorEl] = useState(null);
+	const open = Boolean(anchorEl);
+	const handleClick = event => {
+		setAnchorEl(event.currentTarget);
+	};
+	const handleClose = () => {
+		setAnchorEl(null);
+	};
 
 	return (
 		<Card
@@ -41,64 +56,87 @@ export default function PostCard({ post, primary, toggleLike }) {
 				borderColor: "text.fade",
 			}}
 			variant="outlined">
-			<CardActionArea
-				onClick={() => {
-					navigate(`/comments/${post._id}`);
-				}}>
-				<CardContent sx={{ display: "flex", p: 2 }}>
-					<Box sx={{ mr: 3 }}>
-						<Avatar
-							alt="Profile Picture"
+			<Box sx={{ display: "flex", mb: -3 }}>
+				<Box sx={{ flexGrow: 1 }}></Box>
+				<IconButton onClick={handleClick}>
+					<MoreVertIcon fontSize="small" />
+				</IconButton>
+				<Menu
+					anchorEl={anchorEl}
+					open={open}
+					onClose={handleClose}
+					transformOrigin={{ horizontal: "right", vertical: "top" }}
+					anchorOrigin={{ horizontal: "right", vertical: "bottom" }}>
+					<MenuItem onClick={handleClose}>
+						<ListItemIcon>
+							<DeleteIcon color="error" />
+						</ListItemIcon>
+						<ListItemText>Delete</ListItemText>
+					</MenuItem>
+				</Menu>
+			</Box>
+
+			<CardContent sx={{ display: "flex", p: 2 }}>
+				<Box sx={{ mr: 3 }}>
+					<Avatar
+						alt="Profile Picture"
+						sx={{
+							width: 64,
+							height: 64,
+							bgcolor: primary ? green[500] : pink[500],
+						}}
+						onClick={() => {
+							navigate(`/profile/${post.user.handle}`)
+						}}>
+						{post.user.name.charAt(0)}
+					</Avatar>
+				</Box>
+				<Box>
+					<Box sx={{ mb: 1 }}>
+						<Typography sx={{ mr: 1 }} component="span">
+							<b>{post.user.name}</b>
+						</Typography>
+
+						<Typography component="span" sx={{ color: "grey" }}>
+							@{post.user.handle}
+						</Typography>
+
+						<Typography
+							component="span"
 							sx={{
-								width: 64,
-								height: 64,
-								bgcolor: primary ? green[500] : pink[500],
+								ml: 1,
+								color: primary ? green[500] : pink[400],
 							}}>
-							{post.user.name.charAt(0)}
-						</Avatar>
+							<small>
+								{formatRelative(
+									parseISO(post.created),
+									new Date(),
+								)}
+							</small>
+						</Typography>
 					</Box>
-					<Box>
-						<Box sx={{ mb: 1 }}>
-							<Typography sx={{ mr: 1 }} component="span">
-								<b>{post.user.name}</b>
-							</Typography>
-
-							<Typography component="span" sx={{ color: "grey" }}>
-								@{post.user.handle}
-							</Typography>
-
-							<Typography
-								component="span"
-								sx={{
-									ml: 1,
-									color: primary ? green[500] : pink[400],
-								}}>
-								<small>
-									{formatRelative(
-										parseISO(post.created),
-										new Date(),
-									)}
-								</small>
-							</Typography>
-						</Box>
-
+					<CardActionArea
+						onClick={() => {
+							navigate(`/comments/${post._id}`);
+						}}>
 						<Typography
 							variant="subtitle1"
 							color="text.secondary"
 							sx={{ fontSize: primary ? 21 : 18 }}>
 							{post.body}
 						</Typography>
-					</Box>
-				</CardContent>
-			</CardActionArea>
+					</CardActionArea>
+				</Box>
+			</CardContent>
 
 			<Box
 				sx={{ display: "flex", justifyContent: "space-around", mb: 1 }}>
 				<ButtonGroup variant="text">
-					<IconButton onClick={() => {
-						toggleLike(post._id);
-						fetchToggleLike(post._id);
-					}}>
+					<IconButton
+						onClick={() => {
+							toggleLike(post._id);
+							fetchToggleLike(post._id);
+						}}>
 						{post.likes.includes(authUser._id) ? (
 							<LikedIcon color="error" />
 						) : (
@@ -113,10 +151,12 @@ export default function PostCard({ post, primary, toggleLike }) {
 					</Button>
 				</ButtonGroup>
 				<ButtonGroup variant="text">
-					<IconButton>
+					<IconButton onClick={() => {
+						navigate(`/comments/${post._id}`);
+					}}>
 						<CommentIcon color="success" />
 					</IconButton>
-					<Button>{0}</Button>
+					<Button>{post.comments.length}</Button>
 				</ButtonGroup>
 			</Box>
 		</Card>

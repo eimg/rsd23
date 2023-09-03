@@ -68,6 +68,34 @@ export async function fetchPosts() {
 	return await res.json();
 }
 
+export async function fetchAddPost(body) {
+	const token = getToken();
+	const res = await fetch(`${api}/posts`, {
+		method: 'post',
+		body: JSON.stringify({ body }),
+		headers: {
+			'Authorization': `Bearer ${token}`,
+			'Content-Type': 'application/json',
+		},
+	});
+
+	return res.ok;
+}
+
+export async function fetchAddComment(body, origin) {
+	const token = getToken();
+	const res = await fetch(`${api}/posts/${origin}/comment`, {
+		method: "post",
+		body: JSON.stringify({ body }),
+		headers: {
+			Authorization: `Bearer ${token}`,
+			"Content-Type": "application/json",
+		},
+	});
+
+	return res.ok;
+}
+
 export async function fetchComments(id) {
 	const res = await fetch(`${api}/posts/${id}`);
 	if (!res.ok) return false;
@@ -88,6 +116,22 @@ export async function fetchLikes(id) {
 
 	const post = await res.json();
 	return post.liked_users || [];
+}
+
+export async function fetchFollowers(id) {
+	const res = await fetch(`${api}/users/${id}/followers`);
+	if (!res.ok) return [];
+
+	const user = await res.json();
+	return user.follower_users || [];
+}
+
+export async function fetchFollowing(id) {
+	const res = await fetch(`${api}/users/${id}/following`);
+	if (!res.ok) return [];
+
+	const user = await res.json();
+	return user.following_users || [];
 }
 
 export async function fetchToggleLike(id) {
