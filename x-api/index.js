@@ -51,7 +51,7 @@ app.post("/login", async function (req, res) {
 
 			if (result) {
 				const token = jwt.sign(user, secret);
-				return res.json({ token, user });
+				return res.status(201).json({ token, user });
 			}
 		}
 
@@ -79,7 +79,9 @@ app.post("/users", async function (req, res) {
 			password: hash,
 		});
 
-		return res.json({ _id: result.insertedId, name, handle, profile });
+		return res
+				.status(201)
+				.json({ _id: result.insertedId, name, handle, profile });
 	} catch {
 		return res.sendStatus(500);
 	}
@@ -235,7 +237,7 @@ app.post("/posts", auth, async function (req, res) {
 	};
 
 	const result = await xposts.insertOne(post);
-	res.json({ _id: result.insertedId, ...post });
+	res.status(201).json({ _id: result.insertedId, ...post });
 });
 
 app.post("/posts/:origin/comment", auth, async function (req, res) {
@@ -253,7 +255,7 @@ app.post("/posts/:origin/comment", auth, async function (req, res) {
 	};
 
 	const result = await xposts.insertOne(comment);
-	res.json({ _id: result.insertedId, ...comment });
+	res.status(201).json({ _id: result.insertedId, ...comment });
 });
 
 app.get("/posts/:id", async function (req, res) {
@@ -344,6 +346,104 @@ app.put("/posts/:id/like", auth, async (req, res) => {
 	const result = await xposts.updateOne({ _id }, { $set: post });
 
 	res.json(result);
+});
+
+app.get("/notis", auth, async (req, res) => {
+	const user = res.locals.user;
+
+	try {
+		let notis = await xdb
+			.collection("notis")
+			.aggregate([
+				{
+					$match: { owner: new ObjectId(user._id) },
+				},
+				{
+					$sort: { _id: -1 },
+				},
+				{
+					$limit: 40,
+				},
+				{
+					$lookup: {
+						from: "users",
+						localField: "actor",
+						foreignField: "_id",
+						as: "user",
+					},
+				},
+			])
+			.toArray();
+
+		const format = notis.map(noti => {
+			noti.user = noti.user[0];
+			delete noti.user.password;
+
+			return noti;
+		});
+
+		return res.json(format);
+	} catch (e) {
+		return res.status(500).json({ error: e.message });
+	}
+});
+
+app.post("/notis", auth, async (req, res) => {
+	const user = res.locals.user;
+	const { type, target } = req.body;
+
+	let post = await xdb.collection("posts").findOne({
+		_id: new ObjectId(target),
+	});
+
+	// No noti for unlike
+	if (!post.likes.find(item => item.toString() === user._id))
+		return res.sendStatus(304);
+
+	// No noti for own posts
+	if (user._id === post.owner.toString()) return res.sendStatus(304);
+
+	let result = await xdb.collection("notis").insertOne({
+		type,
+		actor: new ObjectId(user._id),
+		msg: `${type}s your post.`,
+		target: new ObjectId(target),
+		owner: post.owner,
+		read: false,
+		created: new Date(),
+	});
+
+	let noti = await xdb.collection("notis").findOne({
+		_id: result.insertedId,
+	});
+
+	return res.status(201).json(noti);
+});
+
+app.put("/notis", auth, (req, res) => {
+	const user = res.locals.user;
+
+	xdb.collection("notis").updateMany(
+		{ owner: new ObjectId(user._id) },
+		{
+			$set: { read: true },
+		},
+	);
+
+	return res.json({ msg: "all notis marked read" });
+});
+
+app.put("/notis/:id", auth, async (req, res) => {
+	const id = req.params.id;
+
+	xdb.collection("notis").updateOne(
+		{ _id: new ObjectId(id) },
+		{
+			$set: { read: true },
+		},
+	);
+
+	return res.json({ msg: "noti marked read" });
 });
 
 app.listen(8888, () => {
