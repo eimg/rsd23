@@ -46,7 +46,7 @@ export default function Comments() {
 			setPost(comments);
 			setLoading(false);
 		})();
-	}, []);
+	}, [id]);
 
 	return (
 		<>

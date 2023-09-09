@@ -80,8 +80,8 @@ app.post("/users", async function (req, res) {
 		});
 
 		return res
-				.status(201)
-				.json({ _id: result.insertedId, name, handle, profile });
+			.status(201)
+			.json({ _id: result.insertedId, name, handle, profile });
 	} catch {
 		return res.sendStatus(500);
 	}
@@ -91,22 +91,24 @@ app.get("/verify", auth, function (req, res, next) {
 	res.json(res.locals.user);
 });
 
-app.get("/users/:id/followers", async function(req, res) {
+app.get("/users/:id/followers", async function (req, res) {
 	const { id } = req.params;
 
-	const user = await xusers.aggregate([
-		{
-			$match: { _id: new ObjectId(id) },
-		},
-		{
-			$lookup: {
-				localField: "followers",
-				from: "users",
-				foreignField: "_id",
-				as: "follower_users",
+	const user = await xusers
+		.aggregate([
+			{
+				$match: { _id: new ObjectId(id) },
 			},
-		},
-	]).toArray();
+			{
+				$lookup: {
+					localField: "followers",
+					from: "users",
+					foreignField: "_id",
+					as: "follower_users",
+				},
+			},
+		])
+		.toArray();
 
 	res.json(user[0]);
 });
@@ -385,6 +387,88 @@ app.get("/notis", auth, async (req, res) => {
 		return res.json(format);
 	} catch (e) {
 		return res.status(500).json({ error: e.message });
+	}
+});
+
+app.put("/users/:id/follow", auth, async (req, res) => {
+	const authUser = res.locals.user;
+	const targetUserId = req.params.id;
+
+	try {
+		const currentUser = await xusers.findOne({
+			_id: new ObjectId(authUser._id),
+		});
+
+		currentUser.following = currentUser.following || [];
+		currentUser.following.push(new ObjectId(targetUserId));
+
+		await xusers.updateOne(
+			{ _id: currentUser._id },
+			{
+				$set: currentUser,
+			},
+		);
+
+		const targetUser = await xusers.findOne({
+			_id: new ObjectId(targetUserId),
+		});
+
+		targetUser.followers = targetUser.followers || [];
+		targetUser.followers.push(new ObjectId(authUser._id));
+
+		const result = await xusers.updateOne(
+			{ _id: targetUser._id },
+			{
+				$set: targetUser,
+			},
+		);
+
+		res.json(result);
+	} catch (e) {
+		res.status(500).json({ msg: e.message });
+	}
+});
+
+app.put("/users/:id/unfollow", auth, async (req, res) => {
+	const authUser = res.locals.user;
+	const targetUserId = req.params.id;
+
+	try {
+		const currentUser = await xusers.findOne({
+			_id: new ObjectId(authUser._id),
+		});
+
+		currentUser.following = currentUser.following || [];
+		currentUser.following = currentUser.filter(
+			user => user._id.toString() !== targetUserId,
+		);
+
+		await xusers.updateOne(
+			{ _id: currentUser._id },
+			{
+				$set: currentUser,
+			},
+		);
+
+		const targetUser = await xusers.findOne({
+			_id: new ObjectId(targetUserId),
+		});
+
+		targetUser.followers = targetUser.followers || [];
+		targetUser.followers = targetUser.followers.filter(
+			user => user._id.toString !== authUser._id,
+		);
+
+		const result = await xusers.updateOne(
+			{ _id: targetUser._id },
+			{
+				$set: targetUser,
+			},
+		);
+
+		res.json(result);
+	} catch (e) {
+		res.status(500).json({ msg: e.message });
 	}
 });
 

@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 
 import {
 	Box,
@@ -27,8 +27,6 @@ export default function UserList({ users, title }) {
 			</Typography>
 			<List>
 				{users.map(user => {
-					const followed = authUser.following.includes(user._id);
-
 					return (
 						<ListItem key={user._id}>
 							<ListItemAvatar>
@@ -46,20 +44,33 @@ export default function UserList({ users, title }) {
 							/>
 
 							{user._id !== authUser._id && (
-								<Button
-									size="small"
-									edge="end"
-									variant={
-										followed ? "outlined" : "contained"
-									}
-									sx={{ borderRadius: 5 }}>
-									{followed ? "Followed" : "Follow"}
-								</Button>
+								<FollowButton user={user} />
 							)}
 						</ListItem>
 					);
 				})}
 			</List>
 		</Box>
+	);
+}
+
+function FollowButton({ user }) {
+	const { authUser } = useContext(AuthContext);
+
+	const [followed, setFollowed] = useState(
+		authUser.following.includes(user._id),
+	);
+
+	return (
+		<Button
+			size="small"
+			edge="end"
+			variant={followed ? "outlined" : "contained"}
+			sx={{ borderRadius: 5 }}
+			onClick={() => {
+				setFollowed(!followed);
+			}}>
+			{followed ? "Followed" : "Follow"}
+		</Button>
 	);
 }
