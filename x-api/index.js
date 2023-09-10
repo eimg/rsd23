@@ -140,6 +140,8 @@ app.get("/users/:handle", async function (req, res) {
 
 	try {
 		const user = await xusers.findOne({ handle });
+		user.followers = user.followers || [];
+		user.following = user.following || [];
 
 		const data = await xposts
 			.aggregate([
@@ -350,6 +352,95 @@ app.put("/posts/:id/like", auth, async (req, res) => {
 	res.json(result);
 });
 
+app.put("/users/:id/follow", auth, async (req, res) => {
+	const targetUserId = req.params.id;
+	const authUserId = res.locals.user._id;
+
+	const targetUser = await xusers.findOne({
+		_id: new ObjectId(targetUserId),
+	});
+
+	const authUser = await xusers.findOne({
+		_id: new ObjectId(authUserId),
+	});
+
+	targetUser.followers = targetUser.followers || [];
+	authUser.following = authUser.following || [];
+
+	targetUser.followers.push(new ObjectId(authUserId));
+	authUser.following.push(new ObjectId(targetUserId));
+
+	try {
+		await xusers.updateOne(
+			{ _id: new ObjectId(targetUserId) },
+			{
+				$set: { followers: targetUser.followers },
+			},
+		);
+
+		await xusers.updateOne(
+			{ _id: new ObjectId(authUserId) },
+			{
+				$set: { following: authUser.following },
+			},
+		);
+
+		return res.json({
+			followers: targetUser.followers,
+			following: authUser.following,
+		});
+	} catch (e) {
+		return res.status(500).json({ msg: e.message });
+	}
+});
+
+app.put("/users/:id/unfollow", auth, async (req, res) => {
+	const targetUserId = req.params.id;
+	const authUserId = res.locals.user._id;
+
+	const targetUser = await xusers.findOne({
+		_id: new ObjectId(targetUserId),
+	});
+
+	const authUser = await xusers.findOne({
+		_id: new ObjectId(authUserId),
+	});
+
+	targetUser.followers = targetUser.followers || [];
+	authUser.following = authUser.following || [];
+
+	targetUser.followers = targetUser.followers.filter(
+		userId => userId.toString() !== authUserId,
+	);
+
+	authUser.following = authUser.following.filter(
+		userId => userId.toString() !== targetUserId,
+	);
+
+	try {
+		await xusers.updateOne(
+			{ _id: new ObjectId(targetUserId) },
+			{
+				$set: { followers: targetUser.followers },
+			},
+		);
+
+		await xusers.updateOne(
+			{ _id: new ObjectId(authUserId) },
+			{
+				$set: { following: authUser.following },
+			},
+		);
+
+		return res.json({
+			followers: targetUser.followers,
+			following: authUser.following,
+		});
+	} catch (e) {
+		return res.status(500).json({ msg: e.message });
+	}
+});
+
 app.get("/notis", auth, async (req, res) => {
 	const user = res.locals.user;
 
@@ -387,88 +478,6 @@ app.get("/notis", auth, async (req, res) => {
 		return res.json(format);
 	} catch (e) {
 		return res.status(500).json({ error: e.message });
-	}
-});
-
-app.put("/users/:id/follow", auth, async (req, res) => {
-	const authUser = res.locals.user;
-	const targetUserId = req.params.id;
-
-	try {
-		const currentUser = await xusers.findOne({
-			_id: new ObjectId(authUser._id),
-		});
-
-		currentUser.following = currentUser.following || [];
-		currentUser.following.push(new ObjectId(targetUserId));
-
-		await xusers.updateOne(
-			{ _id: currentUser._id },
-			{
-				$set: currentUser,
-			},
-		);
-
-		const targetUser = await xusers.findOne({
-			_id: new ObjectId(targetUserId),
-		});
-
-		targetUser.followers = targetUser.followers || [];
-		targetUser.followers.push(new ObjectId(authUser._id));
-
-		const result = await xusers.updateOne(
-			{ _id: targetUser._id },
-			{
-				$set: targetUser,
-			},
-		);
-
-		res.json(result);
-	} catch (e) {
-		res.status(500).json({ msg: e.message });
-	}
-});
-
-app.put("/users/:id/unfollow", auth, async (req, res) => {
-	const authUser = res.locals.user;
-	const targetUserId = req.params.id;
-
-	try {
-		const currentUser = await xusers.findOne({
-			_id: new ObjectId(authUser._id),
-		});
-
-		currentUser.following = currentUser.following || [];
-		currentUser.following = currentUser.filter(
-			user => user._id.toString() !== targetUserId,
-		);
-
-		await xusers.updateOne(
-			{ _id: currentUser._id },
-			{
-				$set: currentUser,
-			},
-		);
-
-		const targetUser = await xusers.findOne({
-			_id: new ObjectId(targetUserId),
-		});
-
-		targetUser.followers = targetUser.followers || [];
-		targetUser.followers = targetUser.followers.filter(
-			user => user._id.toString !== authUser._id,
-		);
-
-		const result = await xusers.updateOne(
-			{ _id: targetUser._id },
-			{
-				$set: targetUser,
-			},
-		);
-
-		res.json(result);
-	} catch (e) {
-		res.status(500).json({ msg: e.message });
 	}
 });
 
