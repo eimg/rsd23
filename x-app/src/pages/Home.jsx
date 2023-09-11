@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import PostCard from "../components/PostCard";
 import Loading from "../components/Loading";
-import { fetchPosts } from "../libs/fetcher";
+import { fetchPosts, fetchPostNoti } from "../libs/fetcher";
 
 import { AuthContext } from "../ThemedApp";
 
@@ -42,6 +42,8 @@ export default function Home() {
 				return post;
 			}),
 		);
+
+		fetchPostNoti("like", _id);
 	};
 
 	return (

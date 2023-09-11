@@ -1,6 +1,6 @@
 import { useContext } from "react";
 
-import { Box, AppBar, Toolbar, IconButton } from "@mui/material";
+import { Box, AppBar, Toolbar, IconButton, Badge } from "@mui/material";
 
 import {
 	ArrowBack as ArrowBackIcon,
@@ -12,7 +12,7 @@ import {
 
 import { useLocation, useNavigate } from "react-router-dom";
 
-import { AuthContext, ThemeContext } from "../ThemedApp";
+import { AuthContext, ThemeContext, NotiContext } from "../ThemedApp";
 
 export default function Header({ toggleDrawer }) {
 	const location = useLocation();
@@ -20,6 +20,7 @@ export default function Header({ toggleDrawer }) {
 
 	const { auth } = useContext(AuthContext);
 	const { mode, setMode } = useContext(ThemeContext);
+	const { notiCount } = useContext(NotiContext);
 
 	const mainPages = ["/", "/login", "/register"];
 
@@ -69,8 +70,14 @@ export default function Header({ toggleDrawer }) {
 				)}
 
 				{auth && (
-					<IconButton color="inherit">
-						<NotificationsIcon />
+					<IconButton
+						color="inherit"
+						onClick={() => {
+							navigate("/notis");
+						}}>
+						<Badge color="error" badgeContent={notiCount}>
+							<NotificationsIcon />
+						</Badge>
 					</IconButton>
 				)}
 			</Toolbar>

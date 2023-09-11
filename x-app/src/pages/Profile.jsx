@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 
 import { Box, Avatar, Typography } from "@mui/material";
 import { pink } from "@mui/material/colors";
@@ -8,14 +8,38 @@ import { Link, useParams } from "react-router-dom";
 import PostCard from "../components/PostCard";
 import Loading from "../components/Loading";
 
-import { fetchProfile } from "../libs/fetcher";
+import { fetchProfile, fetchPostNoti } from "../libs/fetcher";
+import { AuthContext } from "../ThemedApp";
+import { FollowButton } from "../components/UserList";
 
 export default function Profile() {
 	const { handle } = useParams();
 
+	const { authUser } = useContext(AuthContext);
+
 	const [posts, setPosts] = useState([]);
 	const [user, setUser] = useState({});
 	const [loading, setLoading] = useState(true);
+
+	const toggleLike = _id => {
+		setPosts(
+			posts.map(post => {
+				if (post._id === _id) {
+					if (post.likes.includes(authUser._id)) {
+						post.likes = post.likes.filter(
+							like => like !== authUser._id,
+						);
+					} else {
+						post.likes.push(authUser._id);
+					}
+				}
+
+				return post;
+			}),
+		);
+
+		fetchPostNoti("like", _id);
+	};
 
 	useEffect(() => {
 		(async () => {
@@ -48,11 +72,13 @@ export default function Profile() {
 								height: 128,
 								mb: -6,
 							}}>
-							A
+							{user.name[0]}
 						</Avatar>
 					</Box>
+
 					<Box sx={{ mb: 4, textAlign: "center" }}>
-						<Typography sx={{ mb: 1 }}>
+						<FollowButton user={user} />
+						<Typography sx={{ mb: 1, mt: 2 }}>
 							{user.name}
 							<Typography
 								component="span"
@@ -83,7 +109,13 @@ export default function Profile() {
 					</Box>
 
 					{posts.map(post => {
-						return <PostCard post={post} key={post._id} />;
+						return (
+							<PostCard
+								post={post}
+								key={post._id}
+								toggleLike={toggleLike}
+							/>
+						);
 					})}
 				</Box>
 			)}

@@ -14,17 +14,22 @@ import { useParams } from "react-router-dom";
 import PostCard from "../components/PostCard";
 import Loading from "../components/Loading";
 
+import { useNavigate } from "react-router-dom";
+
 import { AuthContext } from "../ThemedApp";
 
-import { fetchAddComment, fetchComments } from "../libs/fetcher";
+import { fetchAddComment, fetchComments, fetchPostNoti } from "../libs/fetcher";
 
 export default function Comments() {
 	const { id } = useParams();
 	const { authUser } = useContext(AuthContext);
 
+	const navigate = useNavigate();
+
 	const input = useRef();
 
-	const [post, setPost] = useState([]);
+	const [post, setPost] = useState({});
+	const [comments, setComments] = useState([]);
 	const [loading, setLoading] = useState(true);
 
 	const toggleLike = _id => {
@@ -37,13 +42,37 @@ export default function Comments() {
 		}
 
 		setPost({ ...post });
+
+		fetchPostNoti("like", post._id);
+	};
+
+	const toggleCommentLike = _id => {
+		setComments(
+			comments.map(comment => {
+				if (comment._id === _id) {
+					if (comment.likes.includes(authUser._id)) {
+						comment.likes = comment.likes.filter(
+							like => like !== authUser._id,
+						);
+					} else {
+						comment.likes.push(authUser._id);
+					}
+				}
+
+				return comment;
+			}),
+		);
+
+		fetchPostNoti("like", _id);
 	};
 
 	useEffect(() => {
 		(async () => {
-			const comments = await fetchComments(id);
+			const post = await fetchComments(id);
+			if(!post) return navigate("/error");
 
-			setPost(comments);
+			setPost(post);
+			setComments(post.comments);
 			setLoading(false);
 		})();
 	}, [id]);
@@ -55,8 +84,14 @@ export default function Comments() {
 			) : (
 				<Box>
 					<PostCard post={post} primary toggleLike={toggleLike} />
-					{post.comments.map(comment => {
-						return <PostCard post={comment} key={comment._id} />;
+					{comments.map(comment => {
+						return (
+							<PostCard
+								post={comment}
+								key={comment._id}
+								toggleLike={toggleCommentLike}
+							/>
+						);
 					})}
 
 					<Box
@@ -77,10 +112,15 @@ export default function Comments() {
 										const body = input.current.value;
 										if (!body) return false;
 
-										await fetchAddComment( body, id );
+										await fetchAddComment(body, id);
 
-										const updatedPost = await fetchComments( id );
+										const updatedPost = await fetchComments(
+											id,
+										);
+
 										setPost(updatedPost);
+										setComments(updatedPost.comments);
+										fetchPostNoti("comment", id);
 									})();
 								}}>
 								<Input

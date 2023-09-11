@@ -46,11 +46,13 @@ export default function Login() {
 
 					(async () => {
 						const user = await fetchLogin(handle, password);
-						if(!user) setHasError(true);
-
-						setAuth(true);
-						setAuthUser(user);
-						navigate("/");
+						if(!user) {
+							setHasError(true);
+						} else {
+							setAuth(true);
+							setAuthUser(user);
+							navigate("/");
+						}
 					})();
 				}}>
 				<OutlinedInput

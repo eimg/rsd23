@@ -13,11 +13,14 @@ import Likes from "./pages/Likes";
 import Add from "./pages/Add";
 import Followers from "./pages/Followers";
 import Following from "./pages/Following";
+import Notis from "./pages/Notis";
+import Error from "./pages/Error";
 
 const router = createBrowserRouter([
 	{
 		path: "/",
 		element: <ThemedApp />,
+		errorElement: <Error />,
 		children: [
 			{
 				path: "/",
@@ -55,6 +58,14 @@ const router = createBrowserRouter([
 				path: "/users/:id/following",
 				element: <Following />,
 			},
+			{
+				path: "/notis",
+				element: <Notis />,
+			},
+			{
+				path: "/error",
+				element: <Error />
+			}
 		],
 	},
 ]);

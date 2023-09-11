@@ -16,6 +16,7 @@ import { pink } from "@mui/material/colors";
 import { Link } from "react-router-dom";
 
 import { AuthContext } from "../ThemedApp";
+import { fetchPutFollow, fetchPutUnfollow } from "../libs/fetcher";
 
 export default function UserList({ users, title }) {
 	const { authUser } = useContext(AuthContext);
@@ -54,8 +55,8 @@ export default function UserList({ users, title }) {
 	);
 }
 
-function FollowButton({ user }) {
-	const { authUser } = useContext(AuthContext);
+export function FollowButton({ user }) {
+	const { authUser, setAuthUser } = useContext(AuthContext);
 
 	const [followed, setFollowed] = useState(
 		authUser.following.includes(user._id),
@@ -68,6 +69,18 @@ function FollowButton({ user }) {
 			variant={followed ? "outlined" : "contained"}
 			sx={{ borderRadius: 5 }}
 			onClick={() => {
+				if (followed) {
+					authUser.following = authUser.following.filter(
+						userId => userId !== user._id,
+					);
+					setAuthUser(authUser);
+					fetchPutUnfollow(user._id);
+				} else {
+					authUser.following.push(user._id);
+					setAuthUser(authUser);
+					fetchPutFollow(user._id);
+				}
+
 				setFollowed(!followed);
 			}}>
 			{followed ? "Followed" : "Follow"}

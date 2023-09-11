@@ -78,18 +78,20 @@ export default function PostCard({ post, primary, toggleLike }) {
 
 			<CardContent sx={{ display: "flex", p: 2 }}>
 				<Box sx={{ mr: 3 }}>
-					<Avatar
-						alt="Profile Picture"
-						sx={{
-							width: 64,
-							height: 64,
-							bgcolor: primary ? green[500] : pink[500],
-						}}
+					<IconButton
 						onClick={() => {
-							navigate(`/profile/${post.user.handle}`)
+							navigate(`/profile/${post.user.handle}`);
 						}}>
-						{post.user.name.charAt(0)}
-					</Avatar>
+						<Avatar
+							alt="Profile Picture"
+							sx={{
+								width: 64,
+								height: 64,
+								bgcolor: primary ? green[500] : pink[500],
+							}}>
+							{post.user.name.charAt(0)}
+						</Avatar>
+					</IconButton>
 				</Box>
 				<Box>
 					<Box sx={{ mb: 1 }}>
@@ -151,9 +153,10 @@ export default function PostCard({ post, primary, toggleLike }) {
 					</Button>
 				</ButtonGroup>
 				<ButtonGroup variant="text">
-					<IconButton onClick={() => {
-						navigate(`/comments/${post._id}`);
-					}}>
+					<IconButton
+						onClick={() => {
+							navigate(`/comments/${post._id}`);
+						}}>
 						<CommentIcon color="success" />
 					</IconButton>
 					<Button>{post.comments.length}</Button>

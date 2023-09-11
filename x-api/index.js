@@ -184,12 +184,23 @@ app.get("/users/:handle", async function (req, res) {
 });
 
 app.get("/posts", auth, async function (req, res) {
+	const userId = res.locals.user._id;
+
+	const user = await xusers.findOne({ _id: new ObjectId(userId) });
+	user.following = user.following || [];
+
 	try {
 		const data = await xposts
 			.aggregate([
 				{
 					$match: { type: "post" },
 				},
+				// Only show following users' posts
+				// {
+				// 	$match: {
+				// 		owner: { $in: user.following },
+				// 	},
+				// },
 				{
 					$lookup: {
 						localField: "owner",
@@ -224,7 +235,7 @@ app.get("/posts", auth, async function (req, res) {
 
 		return res.json(format);
 	} catch (err) {
-		return res.sendStatus(500);
+		return res.status(500).json({ msg: err.message });
 	}
 });
 
@@ -490,7 +501,7 @@ app.post("/notis", auth, async (req, res) => {
 	});
 
 	// No noti for unlike
-	if (!post.likes.find(item => item.toString() === user._id))
+	if (post.likes.find(item => item.toString() === user._id))
 		return res.sendStatus(304);
 
 	// No noti for own posts
@@ -513,10 +524,10 @@ app.post("/notis", auth, async (req, res) => {
 	return res.status(201).json(noti);
 });
 
-app.put("/notis", auth, (req, res) => {
+app.put("/notis", auth, async (req, res) => {
 	const user = res.locals.user;
 
-	xdb.collection("notis").updateMany(
+	await xdb.collection("notis").updateMany(
 		{ owner: new ObjectId(user._id) },
 		{
 			$set: { read: true },

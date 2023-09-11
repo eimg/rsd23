@@ -45,7 +45,7 @@ export async function fetchVerify() {
 
 	const res = await fetch(`${api}/verify`, {
 		headers: {
-			"Authorization": `Bearer ${token}`,
+			Authorization: `Bearer ${token}`,
 		},
 	});
 
@@ -71,11 +71,11 @@ export async function fetchPosts() {
 export async function fetchAddPost(body) {
 	const token = getToken();
 	const res = await fetch(`${api}/posts`, {
-		method: 'post',
+		method: "post",
 		body: JSON.stringify({ body }),
 		headers: {
-			'Authorization': `Bearer ${token}`,
-			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`,
+			"Content-Type": "application/json",
 		},
 	});
 
@@ -138,11 +138,91 @@ export async function fetchToggleLike(id) {
 	const token = getToken();
 
 	const res = await fetch(`${api}/posts/${id}/like`, {
-		method: 'put',
+		method: "put",
 		headers: {
-			'Authorization': `Bearer ${token}`
-		}
+			Authorization: `Bearer ${token}`,
+		},
 	});
 
 	return res.ok;
 }
+
+export async function fetchPutFollow(id) {
+	const token = getToken();
+
+	const res = await fetch(`${api}/users/${id}/follow`, {
+		method: "put",
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+
+	return res.ok;
+}
+
+export async function fetchPutUnfollow(id) {
+	const token = getToken();
+
+	const res = await fetch(`${api}/users/${id}/unfollow`, {
+		method: "put",
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+
+	return res.ok;
+}
+
+export async function fetchNotis() {
+	const token = getToken();
+
+	const res = await fetch(`${api}/notis`, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+
+	return await res.json();
+}
+
+export async function fetchReadNoti(id) {
+	const token = getToken();
+
+	const res = await fetch(`${api}/notis/${id}`, {
+		method: "put",
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+
+	return res.ok;
+}
+
+export async function fetchReadNotis() {
+	const token = getToken();
+
+	const res = await fetch(`${api}/notis`, {
+		method: "put",
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+
+	return res.ok;
+}
+
+export async function fetchPostNoti(type, target) {
+	const token = getToken();
+
+	const res = await fetch(`${api}/notis`, {
+		method: "post",
+		body: JSON.stringify({ type, target }),
+		headers: {
+			"Content-Type": "application/json",
+			Authorization: `Bearer ${token}`,
+		},
+	});
+
+	return res.ok;
+}
+
