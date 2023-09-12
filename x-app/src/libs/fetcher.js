@@ -1,6 +1,4 @@
-import { TokenRounded } from "@mui/icons-material";
-
-const api = "http://localhost:8888";
+const api = import.meta.env.VITE_API_URL;
 
 export function getToken() {
 	return localStorage.getItem("token") || null;
@@ -226,3 +224,31 @@ export async function fetchPostNoti(type, target) {
 	return res.ok;
 }
 
+export async function fetchUploadPhoto(id, formData) {
+	const token = getToken();
+
+	const res = await fetch(`${api}/users/${id}/photo`, {
+		method: "post",
+		body: formData
+	});
+
+	return res.ok;
+}
+
+export async function fetchUploadCover(id, formData) {
+	const token = getToken();
+
+	const res = await fetch(`${api}/users/${id}/cover`, {
+		method: "post",
+		body: formData,
+	});
+
+	return res.ok;
+}
+
+export async function fetchSearch(q) {
+	const res = await fetch(`${api}/search/users?q=${q}`);
+	if(!res.ok) return false;
+
+	return await res.json();
+}

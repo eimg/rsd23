@@ -1,10 +1,11 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 
 import { Box, AppBar, Toolbar, IconButton, Badge } from "@mui/material";
 
 import {
 	ArrowBack as ArrowBackIcon,
 	Notifications as NotificationsIcon,
+	PersonSearch as PersonSearchIcon,
 	Menu as MenuIcon,
 	LightMode as LightModeIcon,
 	DarkMode as DarkModeIcon,
@@ -13,10 +14,13 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { AuthContext, ThemeContext, NotiContext } from "../ThemedApp";
+import Search from "../pages/Search";
 
 export default function Header({ toggleDrawer }) {
 	const location = useLocation();
 	const navigate = useNavigate();
+
+	const [searchOpen, setSearchOpen] = useState(false);
 
 	const { auth } = useContext(AuthContext);
 	const { mode, setMode } = useContext(ThemeContext);
@@ -59,12 +63,20 @@ export default function Header({ toggleDrawer }) {
 						flexGrow: 1,
 					}}></Box>
 
+				<IconButton
+					sx={{ mr: 1 }}
+					onClick={() => {
+						setSearchOpen(true);
+					}}>
+					<PersonSearchIcon />
+				</IconButton>
+
 				{mode === "dark" ? (
-					<IconButton onClick={() => setMode("light")}>
+					<IconButton sx={{ mr: 1 }} onClick={() => setMode("light")}>
 						<LightModeIcon />
 					</IconButton>
 				) : (
-					<IconButton onClick={() => setMode("dark")}>
+					<IconButton sx={{ mr: 1 }} onClick={() => setMode("dark")}>
 						<DarkModeIcon />
 					</IconButton>
 				)}
@@ -81,6 +93,8 @@ export default function Header({ toggleDrawer }) {
 					</IconButton>
 				)}
 			</Toolbar>
+
+			<Search open={searchOpen} setOpen={setSearchOpen} />
 		</AppBar>
 	);
 }

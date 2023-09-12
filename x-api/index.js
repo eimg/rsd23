@@ -1,5 +1,10 @@
+require("dotenv").config();
+
 const express = require("express");
 const app = express();
+
+const multer = require("multer");
+const upload = multer({ dest: process.env.IMAGES_PATH });
 
 const cors = require("cors");
 app.use(cors());
@@ -10,14 +15,16 @@ app.use(bodyParser.json());
 
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const secret = "horse battery staple";
+const secret = process.env.JWT_SECRET;
 
 const { MongoClient, ObjectId } = require("mongodb");
-const mongo = new MongoClient("mongodb://127.0.0.1");
+const mongo = new MongoClient(process.env.MONGO_URI);
 
 const xdb = mongo.db("x");
 const xposts = xdb.collection("posts");
 const xusers = xdb.collection("users");
+
+app.use("/images", express.static(process.env.IMAGES_PATH));
 
 const auth = function (req, res, next) {
 	const { authorization } = req.headers;
@@ -27,14 +34,13 @@ const auth = function (req, res, next) {
 		return res.status(401).json({ msg: "Token required" });
 	}
 
-	jwt.verify(token, secret, function (err, user) {
-		if (err) {
-			return res.status(401).json({ msg: "Invalid token" });
-		}
-
+	try {
+		let user = jwt.verify(token, secret);
 		res.locals.user = user;
 		next();
-	});
+	} catch (err) {
+		return res.status(401).json({ msg: err.message });
+	}
 };
 
 app.post("/login", async function (req, res) {
@@ -548,6 +554,72 @@ app.put("/notis/:id", auth, async (req, res) => {
 	);
 
 	return res.json({ msg: "noti marked read" });
+});
+
+app.post("/users/:id/photo", upload.single("photo"), async (req, res) => {
+	const id = req.params.id;
+	const fileName = req.file.filename;
+
+	try {
+		await xusers.updateOne(
+			{ _id: new ObjectId(id) },
+			{
+				$set: { photo: fileName },
+			},
+		);
+	} catch (e) {
+		return res.status(500).json({ msg: e.message });
+	}
+
+	return res.json({ msg: "Photo updated" });
+});
+
+app.post("/users/:id/cover", upload.single("cover"), async (req, res) => {
+	const id = req.params.id;
+	const fileName = req.file.filename;
+
+	try {
+		await xusers.updateOne(
+			{ _id: new ObjectId(id) },
+			{
+				$set: { cover: fileName },
+			},
+		);
+	} catch (e) {
+		return res.status(500).json({ msg: e.message });
+	}
+
+	return res.json({ msg: "Cover updated" });
+});
+
+app.get("/search/users", async (req, res) => {
+	let { q } = req.query;
+
+	try {
+		let result = await xusers
+			.aggregate([
+				{
+					$match: {
+						name: new RegExp(`.*${q}.*`, "i"),
+					},
+				},
+				{
+					$sort: { name: 1 },
+				},
+				{
+					$limit: 5,
+				},
+			])
+			.toArray();
+
+		if (result) {
+			return res.json(result);
+		}
+	} catch (e) {
+		return res.status(500).json({ msg: e.message });
+	}
+
+	return res.status(404).json({ msg: "user not found" });
 });
 
 app.listen(8888, () => {

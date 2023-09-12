@@ -14,6 +14,7 @@ import Add from "./pages/Add";
 import Followers from "./pages/Followers";
 import Following from "./pages/Following";
 import Notis from "./pages/Notis";
+import Edit from "./pages/Edit";
 import Error from "./pages/Error";
 
 const router = createBrowserRouter([
@@ -63,9 +64,13 @@ const router = createBrowserRouter([
 				element: <Notis />,
 			},
 			{
+				path: "/edit/profile",
+				element: <Edit />,
+			},
+			{
 				path: "/error",
-				element: <Error />
-			}
+				element: <Error />,
+			},
 		],
 	},
 ]);
