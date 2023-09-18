@@ -47,6 +47,10 @@ export default function PostCard({ post, primary, toggleLike }) {
 		setAnchorEl(null);
 	};
 
+	const profilePhoto = post.user.photo
+		? `${import.meta.env.VITE_IMAGES_URL}/${post.user.photo}`
+		: null;
+
 	return (
 		<Card
 			sx={{
@@ -84,6 +88,7 @@ export default function PostCard({ post, primary, toggleLike }) {
 						}}>
 						<Avatar
 							alt="Profile Picture"
+							src={profilePhoto}
 							sx={{
 								width: 64,
 								height: 64,
