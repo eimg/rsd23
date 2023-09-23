@@ -8,6 +8,8 @@ import { fetchPosts, fetchPostNoti } from "../libs/fetcher";
 
 import { AuthContext } from "../ThemedApp";
 
+import useWebSocket from "../libs/WebSocketClient";
+
 export default function Home() {
 	const navigate = useNavigate();
 
@@ -23,6 +25,17 @@ export default function Home() {
 
 			setPosts(posts);
 			setLoading(false);
+
+			// ! strange behavior !
+			// onmessage needed to define
+			// after above setPosts
+			const wsc = useWebSocket();
+			wsc.addEventListener("message", e => {
+				const msg = JSON.parse(e.data);
+				if (msg.type === "posts") {
+					setPosts([msg.post, ...posts]);
+				}
+			});
 		})();
 	}, []);
 

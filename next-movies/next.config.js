@@ -4,8 +4,8 @@ const nextConfig = {
 	images: {
 		remotePatterns: [
 			{
-				protocol: "https",
-				hostname: "images.unsplash.com",
+				protocol: "http",
+				hostname: "image.tmdb.org",
 				// port: "",
 				// pathname: "/account123/**",
 			},

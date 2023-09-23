@@ -4,6 +4,8 @@ import { CssBaseline } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { pink, grey } from "@mui/material/colors";
 
+import { useNavigate } from "react-router-dom";
+
 import App from "./App";
 import { fetchNotis, fetchVerify, getToken } from "./libs/fetcher";
 
@@ -12,12 +14,11 @@ export const AuthContext = createContext();
 export const UIContext = createContext();
 export const NotiContext = createContext();
 
-const wsc = new WebSocket(import.meta.env.VITE_WS_URL);
-wsc.onopen = () => {
-	wsc.send(getToken());
-};
+import useWebSocket from "./libs/WebSocketClient";
 
 export default function ThemedApp() {
+	const navigate = useNavigate();
+
 	const [mode, setMode] = useState("dark");
 	const [snackbarOpen, setSnackbarOpen] = useState(false);
 	const [snackMessage, setSnackMessage] = useState("Action completed");
@@ -26,11 +27,15 @@ export default function ThemedApp() {
 	const [auth, setAuth] = useState(false);
 	const [authUser, setAuthUser] = useState({});
 
-	wsc.onmessage = e => {
-		setNotiCount(e.data);
-	};
-
 	useEffect(() => {
+		const wsc = useWebSocket();
+		wsc.addEventListener("message", e => {
+			const msg = JSON.parse(e.data);
+			if(msg.type === "notis") {
+				setNotiCount(msg.count);
+			}
+		});
+
 		(async () => {
 			const notis = await fetchNotis();
 			setNotiCount(notis.filter(noti => !noti.read).length);
@@ -38,6 +43,7 @@ export default function ThemedApp() {
 
 		(async () => {
 			const user = await fetchVerify();
+			if(!user) return navigate("/login");
 
 			user.following = user.following || [];
 			user.followers = user.followers || [];

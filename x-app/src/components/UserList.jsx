@@ -59,7 +59,7 @@ export function FollowButton({ user }) {
 	const { authUser, setAuthUser } = useContext(AuthContext);
 
 	const [followed, setFollowed] = useState(
-		authUser.following.includes(user._id),
+		authUser.following && authUser.following.includes(user._id),
 	);
 
 	return (

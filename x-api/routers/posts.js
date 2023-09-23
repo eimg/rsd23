@@ -15,11 +15,14 @@ const xposts = xdb.collection("posts");
 const xusers = xdb.collection("users");
 
 const { auth } = require("./auth");
+const { clients } = require("./ws");
 
 router.get("/posts", auth, async function (req, res) {
 	const userId = res.locals.user._id;
 
 	const user = await xusers.findOne({ _id: new ObjectId(userId) });
+	if (!user) return res.status(404).json({ msg: "User not found" });
+
 	user.following = user.following || [];
 
 	try {
@@ -85,7 +88,14 @@ router.post("/posts", auth, async function (req, res) {
 	};
 
 	const result = await xposts.insertOne(post);
-	res.status(201).json({ _id: result.insertedId, ...post });
+	const resultPost = await getPost(result.insertedId);
+
+	console.log("Broadcasting to all client: new post");
+	clients.map(client => {
+		client.send(JSON.stringify({ type: "posts", post: resultPost }));
+	});
+
+	res.status(201).json(resultPost);
 });
 
 router.post("/posts/:origin/comment", auth, async function (req, res) {
@@ -108,7 +118,34 @@ router.post("/posts/:origin/comment", auth, async function (req, res) {
 
 router.get("/posts/:id", async function (req, res) {
 	const { id } = req.params;
+	const post = await getPost(id);
+	if (post) {
+		res.json(post);
+	} else {
+		res.sendStatus(500);
+	}
+});
 
+router.put("/posts/:id/like", auth, async (req, res) => {
+	const _id = new ObjectId(req.params.id);
+	const user_id = new ObjectId(res.locals.user._id);
+
+	const post = await xposts.findOne({ _id });
+
+	if (post.likes.find(like => like.toString() === user_id.toString())) {
+		post.likes = post.likes.filter(
+			like => like.toString() !== user_id.toString(),
+		);
+	} else {
+		post.likes.push(user_id);
+	}
+
+	const result = await xposts.updateOne({ _id }, { $set: post });
+
+	res.json(result);
+});
+
+async function getPost(id) {
 	try {
 		const data = await xposts
 			.aggregate([
@@ -171,29 +208,10 @@ router.get("/posts/:id", async function (req, res) {
 			});
 		}
 
-		return res.json(format);
+		return format;
 	} catch (err) {
-		return res.sendStatus(500);
+		return false;
 	}
-});
-
-router.put("/posts/:id/like", auth, async (req, res) => {
-	const _id = new ObjectId(req.params.id);
-	const user_id = new ObjectId(res.locals.user._id);
-
-	const post = await xposts.findOne({ _id });
-
-	if (post.likes.find(like => like.toString() === user_id.toString())) {
-		post.likes = post.likes.filter(
-			like => like.toString() !== user_id.toString(),
-		);
-	} else {
-		post.likes.push(user_id);
-	}
-
-	const result = await xposts.updateOne({ _id }, { $set: post });
-
-	res.json(result);
-});
+}
 
 module.exports = { postRouter: router };

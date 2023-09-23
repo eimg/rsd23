@@ -11,14 +11,15 @@ const { MongoClient, ObjectId } = require("mongodb");
 const mongo = new MongoClient(process.env.MONGO_URI);
 
 const xdb = mongo.db("x");
+const xnotis = xdb.collection("notis");
+const xposts = xdb.collection("posts");
 
 const { auth } = require("./auth");
 const { clients } = require("./ws");
 
 const notiCount = async owner => {
 	try {
-		let notis = await xdb
-			.collection("notis")
+		let notis = await xnotis
 			.aggregate([
 				{
 					$match: { owner: new ObjectId(owner) },
@@ -45,8 +46,7 @@ router.get("/notis", auth, async (req, res) => {
 	const user = res.locals.user;
 
 	try {
-		let notis = await xdb
-			.collection("notis")
+		let notis = await xnotis
 			.aggregate([
 				{
 					$match: { owner: new ObjectId(user._id) },
@@ -85,7 +85,7 @@ router.post("/notis", auth, async (req, res) => {
 	const user = res.locals.user;
 	const { type, target } = req.body;
 
-	let post = await xdb.collection("posts").findOne({
+	let post = await xposts.findOne({
 		_id: new ObjectId(target),
 	});
 
@@ -96,7 +96,7 @@ router.post("/notis", auth, async (req, res) => {
 	// // No noti for own posts
 	// if (user._id === post.owner.toString()) return res.sendStatus(304);
 
-	let result = await xdb.collection("notis").insertOne({
+	let result = await xnotis.insertOne({
 		type,
 		actor: new ObjectId(user._id),
 		msg: `${type}s your post.`,
@@ -106,16 +106,16 @@ router.post("/notis", auth, async (req, res) => {
 		created: new Date(),
 	});
 
-	let noti = await xdb.collection("notis").findOne({
+	let noti = await xnotis.findOne({
 		_id: result.insertedId,
 	});
 
 	clients.map(async client => {
 		if (client.uid === post.owner.toString()) {
-			console.log(`Broadcast update: ${client.uid}`);
+			console.log(`Broadcast noti count to: ${client.uid}`);
 
 			const count = await notiCount(client.uid);
-			client.send(count);
+			client.send(JSON.stringify({type: 'notis', count}));
 		}
 	});
 
@@ -125,7 +125,7 @@ router.post("/notis", auth, async (req, res) => {
 router.put("/notis", auth, async (req, res) => {
 	const user = res.locals.user;
 
-	await xdb.collection("notis").updateMany(
+	await xnotis.updateMany(
 		{ owner: new ObjectId(user._id) },
 		{
 			$set: { read: true },
@@ -138,7 +138,7 @@ router.put("/notis", auth, async (req, res) => {
 router.put("/notis/:id", auth, async (req, res) => {
 	const id = req.params.id;
 
-	xdb.collection("notis").updateOne(
+	xnotis.updateOne(
 		{ _id: new ObjectId(id) },
 		{
 			$set: { read: true },
