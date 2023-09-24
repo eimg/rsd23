@@ -29,8 +29,10 @@ export function AlbumArtwork({
 				/>
 			</div>
 			<div className="space-y-1 text-sm">
-				<h3 className="font-medium leading-none">{movie.name}</h3>
-				<p className="text-xs text-muted-foreground">{movie.artist}</p>
+				<h3 className="font-medium leading-none">{movie.title}</h3>
+				<p className="text-xs text-muted-foreground">
+					{movie.release_date.split("-")[0]}
+				</p>
 			</div>
 		</div>
 	);

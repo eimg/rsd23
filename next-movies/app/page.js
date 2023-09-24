@@ -3,6 +3,8 @@ import { Separator } from "@/components/ui/separator";
 
 import { AlbumArtwork } from "@/components/album-artwork";
 
+import Link from "next/link";
+
 export const metadata = {
 	title: "Next Movie",
 	description: "Yet another movie app",
@@ -69,15 +71,16 @@ export default async function MusicPage() {
 							<div className="flex space-x-4 pb-4">
 								{populars.map(movie => (
 									<div className="text-center">
-										<AlbumArtwork
-											key={movie.id}
-											movie={movie}
-											className="w-[250px]"
-											aspectRatio="portrait"
-											width={250}
-											height={330}
-										/>
-										<h2>{movie.title}</h2>
+										<Link href={`/detail/${movie.id}`}>
+											<AlbumArtwork
+												key={movie.id}
+												movie={movie}
+												className="w-[250px]"
+												aspectRatio="portrait"
+												width={250}
+												height={330}
+											/>
+										</Link>
 									</div>
 								))}
 							</div>
@@ -101,6 +104,7 @@ export default async function MusicPage() {
 							<div className="flex space-x-4 pb-4">
 								{trending.map(movie => (
 									<div className="text-center">
+										<Link href={`/detail/${movie.id}`}>
 										<AlbumArtwork
 											key={movie.id}
 											movie={movie}
@@ -109,7 +113,7 @@ export default async function MusicPage() {
 											width={250}
 											height={330}
 										/>
-										<h2>{movie.title}</h2>
+										</Link>
 									</div>
 								))}
 							</div>
@@ -131,6 +135,7 @@ export default async function MusicPage() {
 							<div className="flex space-x-4 pb-4">
 								{tops.map(movie => (
 									<div className="text-center">
+										<Link href={`/detail/${movie.id}`}>
 										<AlbumArtwork
 											key={movie.name}
 											movie={movie}
@@ -139,7 +144,7 @@ export default async function MusicPage() {
 											width={150}
 											height={150}
 										/>
-										<h2>{movie.title}</h2>
+										</Link>
 									</div>
 								))}
 							</div>
