@@ -61,7 +61,7 @@ export default async function MusicPage() {
 								Popular
 							</h2>
 							<p className="text-sm text-muted-foreground">
-								Most popular for the day
+								Most popular right now
 							</p>
 						</div>
 					</div>

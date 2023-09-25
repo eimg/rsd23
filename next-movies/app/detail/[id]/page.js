@@ -2,6 +2,9 @@ import Image from "next/image";
 
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+
+import { cn } from "@/lib/utils";
 
 import Link from "next/link";
 
@@ -40,10 +43,21 @@ export default async function DetailPage({ params }) {
 
 	return (
 		<div className="col-span-3 lg:col-span-4 lg:border-l">
-			<div className="h-full px-4 py-6 lg:px-8">
-				<h2 className="text-2xl mb-2">
+			<div className="h-full px-4 py-6">
+				<h2 className="text-2xl mb-1">
 					{movie.title} ({movie.release_date.split("-")[0]})
 				</h2>
+
+				<div className="text-sm text-muted-foreground mb-3">
+					{movie.genres.map(genere => {
+						return (
+							<Badge variant="outeline" className="me-2">
+								{genere.name}
+							</Badge>
+						);
+					})}
+				</div>
+
 				<Image
 					src={`${img_path}${movie.backdrop_path}`}
 					width={1280}
@@ -59,27 +73,31 @@ export default async function DetailPage({ params }) {
 				</div>
 				<Separator className="my-4" />
 				<div className="relative">
-					<ScrollArea>
-						<div className="flex space-x-4 pb-4">
-							{credits.map(person => (
-								<div className="text-center w-[128px]">
-									<Link href={`/person/${person.id}`}>
+					<div className="flex flex-wrap">
+						{credits.map(person => (
+							<div className="text-center w-[128px] mb-4 me-4">
+								<Link href={`/person/${person.id}`}>
+									{person.profile_path ? (
 										<Image
-											alt={person.name}
+											alt=""
 											src={`${profile_img_path}${person.profile_path}`}
 											width={128}
-											height={128}
+											height={192}
+											className={cn(
+												"h-auto w-auto object-cover transition-all hover:scale-105",
+											)}
 										/>
-									</Link>
-									<h2>{person.name}</h2>
-									<p className="text-xs text-muted-foreground">
-										As {person.character}
-									</p>
-								</div>
-							))}
-						</div>
-						<ScrollBar orientation="horizontal" />
-					</ScrollArea>
+									) : (
+										<div className="h-[192px] bg-slate-500 opacity-20"></div>
+									)}
+								</Link>
+								<h2>{person.name}</h2>
+								<p className="text-xs text-muted-foreground">
+									As {person.character}
+								</p>
+							</div>
+						))}
+					</div>
 				</div>
 			</div>
 		</div>

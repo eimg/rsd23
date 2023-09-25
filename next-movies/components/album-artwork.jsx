@@ -17,7 +17,7 @@ export function AlbumArtwork({
 			<div className="overflow-hidden rounded-md">
 				<Image
 					src={`${img_path}${movie.poster_path}`}
-					alt={movie.title}
+					alt=""
 					width={width}
 					height={height}
 					className={cn(
